@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import socketio from 'socket.io-client';
 import { useParams } from 'react-router-dom';
 import { Map, TileLayer, Marker } from 'react-leaflet';
-import { LeafletMouseEvent } from 'leaflet';
+
+import './styles.css';
 
 export default function Main() {
     const [userPosition, setUserPosition] = useState([-20.722475, -46.579492]);
@@ -20,11 +21,13 @@ export default function Main() {
 
         socket.on('changePosition', response => {
             console.log('SOCKET ==>', response);
+            const { latitude, longitude } = response;
+            setUserPosition([latitude, longitude]);
         });
     }
 
     return (
-        <div className="App">
+        <div id="map-container">
             <Map center={userPosition} zoom={13}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
