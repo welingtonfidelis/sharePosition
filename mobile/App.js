@@ -1,59 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { RectButton } from 'react-native-gesture-handler';
+import geolocation from '@react-native-community/geolocation';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  Button,
-  StatusBar,
-  PermissionsAndroid,
-  TouchableOpacity
+  SafeAreaView, StyleSheet, View, Text,
+  StatusBar, PermissionsAndroid, TouchableOpacity
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
 import Share from './src/components/share';
-
-import geolocation from '@react-native-community/geolocation';
-import axios from 'axios';
 
 export default function App() {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
-  const room = 'test'//new Date().getTime();
-  const urlShare = `http://192.168.0.109:3002/${room}`;
   const [watchId, setWatchId] = useState(-999);
+  const API_URL = 'http://192.168.0.109:3001';
+  const FRONT_URL = 'http://192.168.0.109:3000';
+  const room = uuidv4();
+  const urlShare = `${FRONT_URL}/${room}`;
 
   useEffect(() => {
     requestLocationPermission();
   }, []);
 
   const startLocation = () => {
-    console.log('start');
     setWatchId(geolocation.watchPosition(success => {
       sendPosition(success.coords.latitude, success.coords.longitude);
-      console.log(success);
-
       setLatitude(success.coords.latitude);
       setLongitude(success.coords.longitude);
     }, error => {
       console.log('!!!', error);
     }));
-
-    console.log(watchId);
   }
 
   const stopLocation = () => {
-    console.log('stop');
-    console.log(watchId);
     geolocation.clearWatch(watchId);
     geolocation.stopObserving();
 
@@ -85,7 +65,7 @@ export default function App() {
 
   const sendPosition = async (latitude, longitude) => {
     await axios.post(
-      `http://192.168.0.109:3001/change-position/${room}`,
+      `${API_URL}/change-position/${room}`,
       { latitude, longitude }
     );
   }
@@ -97,6 +77,10 @@ export default function App() {
         <View
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
+
+          <View style={styles.viewID}>
+            <Text>{room}</Text>
+          </View>
 
           <TouchableOpacity onPress={startLocation}>
             <View style={styles.buttonStart} >
@@ -129,6 +113,11 @@ export default function App() {
 const styles = StyleSheet.create({
   scrollView: {
     height: '100%',
+  },
+  viewID: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 5
   },
   buttonStart: {
     marginBottom: 30,

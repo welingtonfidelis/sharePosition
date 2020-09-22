@@ -7,7 +7,7 @@ import './styles.css';
 
 export default function Main() {
     const [userPosition, setUserPosition] = useState([-20.722475, -46.579492]);
-    const apiUrl = 'http://192.168.0.109:3001';
+    const apiUrl = process.env.REACT_APP_API_URL;
     const { room } = useParams();
 
     useEffect(() => {
