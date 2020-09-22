@@ -1,20 +1,15 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React, { useEffect, useState } from 'react';
+import { RectButton } from 'react-native-gesture-handler';
 import {
   SafeAreaView,
   StyleSheet,
   ScrollView,
   View,
   Text,
+  Button,
   StatusBar,
-  PermissionsAndroid
+  PermissionsAndroid,
+  TouchableOpacity
 } from 'react-native';
 
 import {
@@ -25,28 +20,45 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import Share from './src/components/share';
+
 import geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 
 export default function App() {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
-  const room = new Date().getTime();
+  const room = 'test'//new Date().getTime();
+  const urlShare = `http://192.168.0.109:3002/${room}`;
+  const [watchId, setWatchId] = useState(-999);
 
   useEffect(() => {
     requestLocationPermission();
+  }, []);
 
-    geolocation.watchPosition(success => {
-      console.log('==>', success);
-
+  const startLocation = () => {
+    console.log('start');
+    setWatchId(geolocation.watchPosition(success => {
       sendPosition(success.coords.latitude, success.coords.longitude);
+      console.log(success);
 
       setLatitude(success.coords.latitude);
       setLongitude(success.coords.longitude);
     }, error => {
       console.log('!!!', error);
-    })
-  }, []);
+    }));
+
+    console.log(watchId);
+  }
+
+  const stopLocation = () => {
+    console.log('stop');
+    console.log(watchId);
+    geolocation.clearWatch(watchId);
+    geolocation.stopObserving();
+
+    setWatchId(-999);
+  }
 
   const requestLocationPermission = async () => {
     try {
@@ -73,7 +85,7 @@ export default function App() {
 
   const sendPosition = async (latitude, longitude) => {
     await axios.post(
-      `http://192.168.0.109:3001/change-position/${room}`, 
+      `http://192.168.0.109:3001/change-position/${room}`,
       { latitude, longitude }
     );
   }
@@ -82,12 +94,33 @@ export default function App() {
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
-        <ScrollView
+        <View
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          <Text>Latitude: {latitude}</Text>
-          <Text>Longitude: {longitude}</Text>
-        </ScrollView>
+
+          <TouchableOpacity onPress={startLocation}>
+            <View style={styles.buttonStart} >
+              <Text>INICIAR</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={stopLocation}>
+            <View style={styles.buttonStop} >
+              <Text>PARAR</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.viewTextPosition}>
+            <Text style={styles.textPosition}>Latitude: {latitude}</Text>
+            <Text style={styles.textPosition}>Longitude: {longitude}</Text>
+          </View>
+
+          {watchId >= 0 &&
+            <View style={styles.viewShare}>
+              <Share message={urlShare} />
+            </View>
+          }
+        </View>
       </SafeAreaView>
     </>
   );
@@ -95,39 +128,36 @@ export default function App() {
 
 const styles = StyleSheet.create({
   scrollView: {
-    backgroundColor: Colors.lighter,
+    height: '100%',
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
+  buttonStart: {
+    marginBottom: 30,
+    backgroundColor: '#0bd402',
+    height: 80,
+    margin: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8
   },
-  body: {
-    backgroundColor: Colors.white,
+  buttonStop: {
+    marginBottom: 30,
+    backgroundColor: '#EB2101',
+    height: 80,
+    margin: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8
   },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  viewShare: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    marginBottom: 20
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
+  viewTextPosition: {
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
+  textPosition: {
+    fontSize: 20
+  }
 });
